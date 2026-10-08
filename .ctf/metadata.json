@@ -1,0 +1,13 @@
+{
+  "title": "XXL-JOB Executor Unauthenticated RCE",
+  "description": "XXL-JOB 2.2.0 with no accessToken configured: the executor's /run endpoint on port 9999 accepts a job from anyone, and a GLUE_SHELL job runs its script on the executor host.",
+  "question": "Abuse the unauthenticated XXL-JOB executor to run commands and get a shell.",
+  "category": "WEB",
+  "difficulty": 2,
+  "evidence_kind": "SECRET",
+  "capabilities": [
+    "unauthenticated-access",
+    "remote-code-execution",
+    "job-scheduler"
+  ]
+}

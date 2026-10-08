@@ -1,0 +1,305 @@
+{
+  "generated_by_isoloom": "from isoloom.yml; don't edit: change the spec and run `isoloom generate` (`isoloom check` fails when this file is out of date)",
+  "resolved_version": 1,
+  "name": "vulhub-xxl-job-unacc",
+  "instance": null,
+  "inputs": [],
+  "networks": {
+    "lab": {
+      "cidr": "10.60.250.0/24",
+      "docker_cidr": "10.60.250.0/24",
+      "internet": false,
+      "gateway": null,
+      "gateway_address": "10.60.250.1",
+      "router": null,
+      "controller": "10.60.250.253"
+    }
+  },
+  "reach": [],
+  "machines": {
+    "db": {
+      "access": false,
+      "supplied": false,
+      "shapes": [
+        "docker"
+      ],
+      "arch": "amd64",
+      "os": null,
+      "windows": false,
+      "addresses": {
+        "lab": "10.60.250.30"
+      },
+      "docker_addresses": {
+        "lab": "10.60.250.30"
+      },
+      "services": [
+        {
+          "port": 3306,
+          "name": "mysql",
+          "http": false,
+          "publish": null
+        }
+      ],
+      "depends_on": [],
+      "inputs": [],
+      "volumes": {},
+      "resources": {
+        "cpus": 1,
+        "memory_mb": 512,
+        "disk_gb": 20
+      },
+      "gateway_of": [],
+      "routes": [],
+      "default_gateway": null,
+      "offline": true
+    },
+    "admin": {
+      "access": false,
+      "supplied": false,
+      "shapes": [
+        "docker"
+      ],
+      "arch": "amd64",
+      "os": null,
+      "windows": false,
+      "addresses": {
+        "lab": "10.60.250.20"
+      },
+      "docker_addresses": {
+        "lab": "10.60.250.20"
+      },
+      "services": [
+        {
+          "port": 8080,
+          "name": "web",
+          "http": true,
+          "publish": 8080
+        }
+      ],
+      "depends_on": [
+        "db"
+      ],
+      "inputs": [],
+      "volumes": {},
+      "resources": {
+        "cpus": 1,
+        "memory_mb": 512,
+        "disk_gb": 20
+      },
+      "gateway_of": [],
+      "routes": [],
+      "default_gateway": null,
+      "offline": true
+    },
+    "executor": {
+      "access": false,
+      "supplied": false,
+      "shapes": [
+        "docker"
+      ],
+      "arch": "amd64",
+      "os": null,
+      "windows": false,
+      "addresses": {
+        "lab": "10.60.250.10"
+      },
+      "docker_addresses": {
+        "lab": "10.60.250.10"
+      },
+      "services": [
+        {
+          "port": 9999,
+          "name": "executor",
+          "http": true,
+          "publish": 9999
+        }
+      ],
+      "depends_on": [
+        "admin"
+      ],
+      "inputs": [],
+      "volumes": {},
+      "resources": {
+        "cpus": 1,
+        "memory_mb": 512,
+        "disk_gb": 20
+      },
+      "gateway_of": [],
+      "routes": [],
+      "default_gateway": null,
+      "offline": true
+    }
+  },
+  "start_order": [
+    "db",
+    "admin",
+    "executor"
+  ],
+  "clones": {},
+  "tools": {},
+  "groups": {},
+  "router": null,
+  "controller": {
+    "addresses": {
+      "lab": "10.60.250.253"
+    }
+  },
+  "published": [
+    {
+      "machine": "admin",
+      "port": 8080,
+      "host_port": 8080
+    },
+    {
+      "machine": "executor",
+      "port": 9999,
+      "host_port": 9999
+    }
+  ],
+  "targets": {
+    "possible": [
+      "docker",
+      "hosted",
+      "docker-vm",
+      "cloud-docker",
+      "kubernetes"
+    ],
+    "generated": [
+      "docker",
+      "hosted",
+      "docker-vm",
+      "cloud-docker",
+      "kubernetes"
+    ],
+    "refused": {},
+    "not_possible": {
+      "hybrid": "only when some machines are containers and others are VMs",
+      "vagrant": "needs `vm:` on db, admin, executor",
+      "proxmox": "needs `vm:` on db, admin, executor",
+      "cloud-vm": "needs `vm:` on db, admin, executor",
+      "external": "needs `external:` on db, admin, executor"
+    }
+  },
+  "checks": {
+    "default_position": "networks",
+    "positions": [
+      {
+        "position": "networks",
+        "machine": null,
+        "runner": "isoloom-check",
+        "checks": [
+          {
+            "name": "the admin console answers",
+            "derived": false,
+            "kind": "http",
+            "target": "http://admin:8080/xxl-job-admin/toLogin",
+            "expect": "200",
+            "wait": 300
+          },
+          {
+            "name": "the executor API answers",
+            "derived": false,
+            "kind": "script",
+            "target": "checks/executor.sh",
+            "expect": "",
+            "wait": 180
+          }
+        ]
+      },
+      {
+        "position": "db",
+        "machine": "db",
+        "runner": "isoloom-check-db",
+        "checks": [
+          {
+            "name": "admin:8080 from db",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.60.250.20:8080/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "executor:9999 from db",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.60.250.10:9999/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "no internet from db",
+            "derived": true,
+            "kind": "http",
+            "target": "http://1.1.1.1/",
+            "expect": "blocked",
+            "wait": 0
+          }
+        ]
+      },
+      {
+        "position": "admin",
+        "machine": "admin",
+        "runner": "isoloom-check-admin",
+        "checks": [
+          {
+            "name": "db:3306 from admin",
+            "derived": true,
+            "kind": "tcp",
+            "target": "10.60.250.30:3306",
+            "expect": "open",
+            "wait": 30
+          },
+          {
+            "name": "executor:9999 from admin",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.60.250.10:9999/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "no internet from admin",
+            "derived": true,
+            "kind": "http",
+            "target": "http://1.1.1.1/",
+            "expect": "blocked",
+            "wait": 0
+          }
+        ]
+      },
+      {
+        "position": "executor",
+        "machine": "executor",
+        "runner": "isoloom-check-executor",
+        "checks": [
+          {
+            "name": "db:3306 from executor",
+            "derived": true,
+            "kind": "tcp",
+            "target": "10.60.250.30:3306",
+            "expect": "open",
+            "wait": 30
+          },
+          {
+            "name": "admin:8080 from executor",
+            "derived": true,
+            "kind": "http",
+            "target": "http://10.60.250.20:8080/",
+            "expect": "any",
+            "wait": 30
+          },
+          {
+            "name": "no internet from executor",
+            "derived": true,
+            "kind": "http",
+            "target": "http://1.1.1.1/",
+            "expect": "blocked",
+            "wait": 0
+          }
+        ]
+      }
+    ]
+  },
+  "message": "XXL-JOB 2.2.0: the admin console answers at http://localhost:8080/xxl-job-admin and the executor at\nhttp://localhost:9999/. Does the executor ask who sends it jobs?\n"
+}

@@ -1,0 +1,46 @@
+# yaml-language-server: $schema=https://www.isoloom.com/schema/v1.json
+# XXL-JOB executor unauthenticated access (Vulhub, by phith0n and the Vulhub contributors) as an Isoloom spec:
+# Vulhub's xxl-job/unacc, vendored in app/: the published images
+# vulhub/xxl-job:2.2.0-admin and -executor, and mysql:5.7 with the password of Vulhub's compose file baked in.
+# `isoloom generate`, then `isoloom run docker`.
+version: 1
+name: vulhub-xxl-job-unacc
+
+networks:
+  lab: { cidr: 10.60.250.0/24, internet: false }
+
+machines:
+  db:
+    networks: { lab: 30 }
+    services: [{ port: 3306, name: mysql }]
+    resources: { cpus: 1, memory_mb: 512 }
+    docker:
+      build: build/db
+
+  admin:
+    networks: { lab: 20 }
+    services: [{ port: 8080, name: web, http: true, publish: 8080 }]
+    resources: { cpus: 1, memory_mb: 512 }
+    depends_on: [db]
+    docker:
+      image: vulhub/xxl-job:2.2.0-admin
+
+  executor:
+    networks: { lab: 10 }
+    services: [{ port: 9999, name: executor, http: true, publish: 9999 }]
+    resources: { cpus: 1, memory_mb: 512 }
+    depends_on: [admin]
+    docker:
+      image: vulhub/xxl-job:2.2.0-executor
+
+checks:
+  - name: the admin console answers
+    http: http://admin:8080/xxl-job-admin/toLogin
+    wait: 300
+  - name: the executor API answers
+    script: checks/executor.sh
+    wait: 180
+
+message: |
+  XXL-JOB 2.2.0: the admin console answers at http://localhost:{{ machines.admin.services.0.publish }}/xxl-job-admin and the executor at
+  http://localhost:{{ machines.executor.services.0.publish }}/. Does the executor ask who sends it jobs?
