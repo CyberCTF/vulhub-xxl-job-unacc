@@ -177,7 +177,8 @@
       "vagrant": "needs `vm:` on db, admin, executor",
       "proxmox": "needs `vm:` on db, admin, executor",
       "cloud-vm": "needs `vm:` on db, admin, executor",
-      "external": "needs `external:` on db, admin, executor"
+      "external": "needs `external:` on db, admin, executor",
+      "cloud-services": "left out by `targets:`"
     }
   },
   "checks": {
