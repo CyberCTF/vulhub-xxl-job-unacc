@@ -1,0 +1,64 @@
+{
+  "objectives": [
+    {
+      "key": "main",
+      "title": "Read the flag",
+      "prompt": "Send the XXL-JOB executor a job of your own, run a command on it and read /ctf/flag.",
+      "check": {
+        "evidence": "SECRET",
+        "format": "FLAG{%s}"
+      },
+      "dev": "FLAG{dev-vulhub-xxl-job-unacc}",
+      "hints": [
+        "The executor on 9999 accepts jobs from anyone: no accessToken is configured. Read XXL-JOB's executor API documentation.",
+        "One GLUE type runs its script in a shell on the executor host. The flag is at /ctf/flag on the executor machine."
+      ],
+      "steps": [
+        {
+          "key": "version",
+          "title": "Identify the product",
+          "prompt": "Which job scheduler, and which version, is deployed? (name and version)",
+          "check": {
+            "answer_regex": "(?i)xxl[- ]?job\\s*2\\.2\\.0"
+          }
+        },
+        {
+          "key": "component",
+          "title": "Find the target",
+          "prompt": "Which of the two components runs job scripts? (name)",
+          "check": {
+            "answer": [
+              "executor",
+              "the executor",
+              "xxl-job-executor"
+            ]
+          }
+        },
+        {
+          "key": "setting",
+          "title": "Find the missing setting",
+          "prompt": "Which configuration value, when empty, leaves the executor open to anyone? (setting name)",
+          "check": {
+            "answer": [
+              "accesstoken",
+              "xxl.job.accesstoken",
+              "access token"
+            ]
+          }
+        },
+        {
+          "key": "glue",
+          "title": "Name the job type",
+          "prompt": "Which GLUE type runs a shell script? (type name)",
+          "check": {
+            "answer": [
+              "glue_shell",
+              "shell",
+              "glue shell"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

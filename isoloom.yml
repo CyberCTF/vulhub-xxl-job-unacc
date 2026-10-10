@@ -6,6 +6,9 @@
 version: 1
 name: vulhub-xxl-job-unacc
 
+# Given by the CyberCTF launcher: this player's flag. Without it the development flag.
+inputs: [CTF_FLAG_MAIN]
+
 networks:
   lab: { cidr: 10.60.250.0/24, internet: false }
 
@@ -30,8 +33,11 @@ machines:
     services: [{ port: 9999, name: executor, http: true, publish: 9999 }]
     resources: { cpus: 1, memory_mb: 512 }
     depends_on: [admin]
+    inputs: [CTF_FLAG_MAIN]
+    volumes: { ctf: /ctf }   # the flag, written by ctf/flag.sh at every start
     docker:
       image: vulhub/xxl-job:2.2.0-executor
+      init: [ctf/flag.sh]
 
 checks:
   - name: the admin console answers

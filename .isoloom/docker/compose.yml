@@ -136,8 +136,13 @@ services:
     networks:
       lab:
         ipv4_address: 10.60.250.10
+    environment:
+      CTF_FLAG_MAIN: ${CTF_FLAG_MAIN:-}
     ports:
     - ${ISOLOOM_PUBLISH_ADDRESS:-127.0.0.1}:${ISOLOOM_PUBLISH_FIXED:+9999}:9999
+    volumes:
+    - executor-ctf:/ctf
+    - isoloom-probe-amd64:/.isoloom-probe:ro
     healthcheck:
       test:
       - CMD
@@ -149,8 +154,6 @@ services:
       timeout: 3s
       retries: 60
       start_period: 10s
-    volumes:
-    - isoloom-probe-amd64:/.isoloom-probe:ro
     depends_on:
       isoloom-probe-amd64:
         condition: service_completed_successfully
@@ -191,6 +194,26 @@ services:
     labels:
       isoloom.managed: 'true'
       isoloom.environment: vulhub-xxl-job-unacc
+  executor-init-1:
+    image: vulhub/xxl-job:2.2.0-executor
+    entrypoint:
+    - /bin/sh
+    - /isoloom/init/flag.sh
+    volumes:
+    - ../../ctf/flag.sh:/isoloom/init/flag.sh:ro
+    - executor-ctf:/ctf
+    network_mode: service:executor
+    environment:
+      CTF_FLAG_MAIN: ${CTF_FLAG_MAIN:-}
+    depends_on:
+      executor:
+        condition: service_healthy
+      executor-routes:
+        condition: service_healthy
+    restart: no
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: vulhub-xxl-job-unacc
   isoloom-check:
     image: curlimages/curl:8.11.1
     profiles:
@@ -218,6 +241,8 @@ services:
         condition: service_healthy
       executor:
         condition: service_healthy
+      executor-init-1:
+        condition: service_completed_successfully
       executor-routes:
         condition: service_healthy
     labels:
@@ -244,6 +269,8 @@ services:
         condition: service_healthy
       executor:
         condition: service_healthy
+      executor-init-1:
+        condition: service_completed_successfully
       executor-routes:
         condition: service_healthy
     labels:
@@ -270,6 +297,8 @@ services:
         condition: service_healthy
       executor:
         condition: service_healthy
+      executor-init-1:
+        condition: service_completed_successfully
       executor-routes:
         condition: service_healthy
     labels:
@@ -296,6 +325,8 @@ services:
         condition: service_healthy
       executor:
         condition: service_healthy
+      executor-init-1:
+        condition: service_completed_successfully
       executor-routes:
         condition: service_healthy
     labels:
@@ -325,6 +356,10 @@ networks:
       isoloom.managed: 'true'
       isoloom.environment: vulhub-xxl-job-unacc
 volumes:
+  executor-ctf:
+    labels:
+      isoloom.managed: 'true'
+      isoloom.environment: vulhub-xxl-job-unacc
   isoloom-probe-amd64:
     labels:
       isoloom.managed: 'true'
