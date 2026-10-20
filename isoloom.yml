@@ -7,37 +7,49 @@ version: 1
 name: vulhub-xxl-job-unacc
 
 # Given by the CyberCTF launcher: this player's flag. Without it the development flag.
-inputs: [CTF_FLAG_MAIN]
+inputs:
+  CTF_FLAG_MAIN: {}
 
 networks:
-  lab: { cidr: 10.60.250.0/24, internet: false }
+  lab: {cidr: 10.60.250.0/24, internet: false}
 
 machines:
   db:
-    networks: { lab: 30 }
-    services: [{ port: 3306, name: mysql }]
-    resources: { cpus: 1, memory_mb: 512 }
-    docker:
+    networks: {lab: 30}
+    resources: {cpus: 1, memory_mb: 512}
+    ports:
+      mysql:
+        port: 3306
+    app:
       build: build/db
-
   admin:
-    networks: { lab: 20 }
-    services: [{ port: 8080, name: web, http: true, publish: 8080 }]
-    resources: { cpus: 1, memory_mb: 512 }
+    networks: {lab: 20}
+    resources: {cpus: 1, memory_mb: 512}
     depends_on: [db]
-    docker:
+    ports:
+      web:
+        port: 8080
+        protocol: http
+        publish: true
+    app:
       image: vulhub/xxl-job:2.2.0-admin
-
   executor:
-    networks: { lab: 10 }
-    services: [{ port: 9999, name: executor, http: true, publish: 9999 }]
-    resources: { cpus: 1, memory_mb: 512 }
+    networks: {lab: 10}
+    resources: {cpus: 1, memory_mb: 512}
     depends_on: [admin]
-    inputs: [CTF_FLAG_MAIN]
-    volumes: { ctf: /ctf }   # the flag, written by ctf/flag.sh at every start
-    docker:
+    volumes: {ctf: /ctf}     # the flag, written by ctf/flag.sh at every start
+    ports:
+      executor:
+        port: 9999
+        protocol: http
+        publish: true
+    files:
+      - path: /run/lab/ctf_flag_main
+        input: CTF_FLAG_MAIN
+    setup:
+      - ctf/flag.sh
+    app:
       image: vulhub/xxl-job:2.2.0-executor
-      init: [ctf/flag.sh]
 
 checks:
   - name: the admin console answers
@@ -48,5 +60,5 @@ checks:
     wait: 180
 
 message: |
-  XXL-JOB 2.2.0: the admin console answers at http://localhost:{{ machines.admin.services.0.publish }}/xxl-job-admin and the executor at
-  http://localhost:{{ machines.executor.services.0.publish }}/. Does the executor ask who sends it jobs?
+  XXL-JOB 2.2.0: the admin console answers at {{ machines.admin.ports.web.url }}xxl-job-admin and the executor at
+  {{ machines.executor.ports.executor.url }}. Does the executor ask who sends it jobs?
