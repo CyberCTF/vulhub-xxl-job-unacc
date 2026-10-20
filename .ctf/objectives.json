@@ -19,7 +19,7 @@
           "title": "Identify the product",
           "prompt": "Which job scheduler, and which version, is deployed? (name and version)",
           "check": {
-            "answer_regex": "(?i)xxl[- ]?job\\s*2\\.2\\.0"
+            "answer_regex": "xxl[- ]?job\\s*2\\.2\\.0"
           }
         },
         {
